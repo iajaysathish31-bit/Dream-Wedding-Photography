@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import { sendBookingNotification, sendResetCodeEmail } from './utils/email.js';
+import { createClient } from '@supabase/supabase-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,70 @@ if (!fs.existsSync(adminsFile)) {
 const sessions = new Map();
 const resetCodes = new Map();
 
+// Supabase client initialization
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const isSupabaseConfigured = supabaseUrl && supabaseKey;
+
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
+const KV_TABLE = 'kv_store_824c4e00';
+
+const readSubmissions = async () => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from(KV_TABLE).select('value').eq('key', 'submissions').maybeSingle();
+      if (!error && data) return data.value || [];
+    } catch (err) {
+      console.error('Supabase submissions read error:', err);
+    }
+  }
+  try {
+    return JSON.parse(fs.readFileSync(submissionsFile, 'utf-8'));
+  } catch (e) {
+    return [];
+  }
+};
+
+const writeSubmissions = async (submissions) => {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from(KV_TABLE).upsert({ key: 'submissions', value: submissions });
+      if (!error) return;
+    } catch (err) {
+      console.error('Supabase submissions write error:', err);
+    }
+  }
+  fs.writeFileSync(submissionsFile, JSON.stringify(submissions, null, 2));
+};
+
+const readAdmins = async () => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from(KV_TABLE).select('value').eq('key', 'admins').maybeSingle();
+      if (!error && data) return data.value || [];
+    } catch (err) {
+      console.error('Supabase admins read error:', err);
+    }
+  }
+  try {
+    return JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+  } catch (e) {
+    return [];
+  }
+};
+
+const writeAdmins = async (admins) => {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from(KV_TABLE).upsert({ key: 'admins', value: admins });
+      if (!error) return;
+    } catch (err) {
+      console.error('Supabase admins write error:', err);
+    }
+  }
+  fs.writeFileSync(adminsFile, JSON.stringify(admins, null, 2));
+};
+
 // 1. Submit Inquiry: POST /api/booking/submit
 app.post('/api/booking/submit', async (req, res) => {
   try {
@@ -42,14 +107,14 @@ app.post('/api/booking/submit', async (req, res) => {
       return res.json({ success: true, submissionId: 'honeypot' });
     }
 
-    const submissions = JSON.parse(fs.readFileSync(submissionsFile, 'utf-8'));
+    const submissions = await readSubmissions();
     const submissionId = `booking_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const newSubmission = {
       ...data,
       submittedAt: new Date().toISOString()
     };
     submissions.push(newSubmission);
-    fs.writeFileSync(submissionsFile, JSON.stringify(submissions, null, 2));
+    await writeSubmissions(submissions);
 
     // Send email to customer (await it to return preview link for testing)
     let emailResult = { sent: false };
@@ -72,7 +137,7 @@ app.post('/api/booking/submit', async (req, res) => {
 });
 
 // 2. Fetch submissions: GET /api/admin/submissions
-app.get('/api/admin/submissions', (req, res) => {
+app.get('/api/admin/submissions', async (req, res) => {
   try {
     const authHeader = req.headers['authorization'] || '';
     const token = authHeader.replace('Bearer ', '');
@@ -81,7 +146,7 @@ app.get('/api/admin/submissions', (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const submissions = JSON.parse(fs.readFileSync(submissionsFile, 'utf-8'));
+    const submissions = await readSubmissions();
     // Sort by submittedAt desc
     submissions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
@@ -93,9 +158,9 @@ app.get('/api/admin/submissions', (req, res) => {
 });
 
 // 3. Admin Check Setup: GET /api/auth/check-setup
-app.get('/api/auth/check-setup', (req, res) => {
+app.get('/api/auth/check-setup', async (req, res) => {
   try {
-    const admins = JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+    const admins = await readAdmins();
     res.json({ hasAdmin: admins.length > 0 });
   } catch (error) {
     console.error('API Error:', error);
@@ -104,7 +169,7 @@ app.get('/api/auth/check-setup', (req, res) => {
 });
 
 // 4. Admin Signup: POST /api/auth/signup
-app.post('/api/auth/signup', (req, res) => {
+app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
@@ -112,14 +177,14 @@ app.post('/api/auth/signup', (req, res) => {
       return res.status(400).json({ error: 'Missing fields' });
     }
 
-    const admins = JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+    const admins = await readAdmins();
     if (admins.find((a) => a.email === email)) {
       return res.status(400).json({ error: 'Admin already exists' });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
     admins.push({ email, password: hashedPassword, name });
-    fs.writeFileSync(adminsFile, JSON.stringify(admins, null, 2));
+    await writeAdmins(admins);
 
     res.json({ success: true });
   } catch (error) {
@@ -129,11 +194,11 @@ app.post('/api/auth/signup', (req, res) => {
 });
 
 // 5. Admin Login: POST /api/auth/login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const admins = JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+    const admins = await readAdmins();
     const admin = admins.find((a) => a.email === email);
 
     if (!admin || !bcrypt.compareSync(password, admin.password)) {
@@ -169,7 +234,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email address is required' });
     }
 
-    const admins = JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+    const admins = await readAdmins();
     const admin = admins.find((a) => a.email.toLowerCase() === email.toLowerCase());
 
     if (!admin) {
@@ -198,7 +263,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 // 5b. Admin Verify & Reset Password: POST /api/auth/reset-password
-app.post('/api/auth/reset-password', (req, res) => {
+app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
     if (!email || !code || !newPassword) {
@@ -222,7 +287,7 @@ app.post('/api/auth/reset-password', (req, res) => {
     }
 
     // Code is valid, update password
-    const admins = JSON.parse(fs.readFileSync(adminsFile, 'utf-8'));
+    const admins = await readAdmins();
     const adminIndex = admins.findIndex((a) => a.email.toLowerCase() === emailKey);
 
     if (adminIndex === -1) {
@@ -231,7 +296,7 @@ app.post('/api/auth/reset-password', (req, res) => {
     }
 
     admins[adminIndex].password = bcrypt.hashSync(newPassword, 10);
-    fs.writeFileSync(adminsFile, JSON.stringify(admins, null, 2));
+    await writeAdmins(admins);
 
     // Clear reset request
     resetCodes.delete(emailKey);
