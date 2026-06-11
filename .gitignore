@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production builds
+dist/
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Local email previews and mock database files
+data/email_preview.html
+data/email_preview_url.txt
+data/ethereal_credentials.json
+data/submissions.json
+data/admins.json
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

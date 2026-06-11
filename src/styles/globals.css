@@ -1,0 +1,45 @@
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+body {
+  position: relative;
+}
+
+/* Selection Color */
+::selection {
+  background-color: #C5A880;
+  color: #FAF5EB;
+}
+
+/* Scrollbar Styling - Divine Luxury Light */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF5EB;
+  border-left: 1px solid rgba(197, 168, 128, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #C5A880 0%, #EADBC8 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(197, 168, 128, 0.25);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #B59870 0%, #C5A880 100%);
+  box-shadow: 0 0 15px rgba(197, 168, 128, 0.4);
+}
+
+/* Ethereal Glow on Links */
+a {
+  transition: all 0.5s ease;
+}
+
+a:hover {
+  text-shadow: 0 0 8px rgba(197, 168, 128, 0.3);
+}
