@@ -70,7 +70,7 @@ export default function Footer() {
               Find Us
             </h4>
             <a
-              href="https://maps.google.com/?q=Dream+Wedding+Photography+Katpadi"
+              href="https://www.google.com/maps/search/?api=1&query=Dream+wedding+photography%2C+7th%2C+main+Federal+Bank+Upstairs%2C+40%2F1%2C+Gandhi+Nagar%2C+Vellore%2C+Tamil+Nadu+632006"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex gap-3 items-start justify-center md:justify-start hover:opacity-80 transition-opacity duration-300"
@@ -78,9 +78,9 @@ export default function Footer() {
               <MapPin className="w-4 h-4 text-[#C5A880] mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
               <address className="not-italic text-[#2E2820]/80 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
                 Dream Wedding Photography<br />
-                No.40, 7th East Main Road<br />
-                E.B. Stop, Gandhinagar<br />
-                Katpadi – 632 006, Tamil Nadu
+                40/1, 7th Main Road, Gandhi Nagar<br />
+                Federal Bank Upstairs<br />
+                Vellore – 632 006, Tamil Nadu
               </address>
             </a>
           </div>
@@ -101,11 +101,13 @@ export default function Footer() {
                 <Instagram className="w-5 h-5 text-[#C5A880] group-hover:text-[#FAF5EB] transition-colors duration-500" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://www.google.com/maps/search/?api=1&query=Dream+wedding+photography%2C+7th%2C+main+Federal+Bank+Upstairs%2C+40%2F1%2C+Gandhi+Nagar%2C+Vellore%2C+Tamil+Nadu+632006"
+                target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ scale: 1.2, rotate: 5 }}
                 className="w-12 h-12 border-2 border-[#C5A880]/50 rounded-full flex items-center justify-center hover:bg-[#C5A880] hover:border-[#C5A880] hover:shadow-[0_0_20px_rgba(197,168,128,0.4)] transition-all duration-500 group backdrop-blur-sm"
               >
-                <Youtube className="w-5 h-5 text-[#C5A880] group-hover:text-[#FAF5EB] transition-colors duration-500" />
+                <MapPin className="w-5 h-5 text-[#C5A880] group-hover:text-[#FAF5EB] transition-colors duration-500" />
               </motion.a>
               <motion.a
                 href="https://wa.me/919655334114"
