@@ -116,12 +116,22 @@ app.post('/api/booking/submit', async (req, res) => {
     submissions.push(newSubmission);
     await writeSubmissions(submissions);
 
-    // Send email to customer (await it to return preview link for testing)
+    // Send email to customer (asynchronous / non-blocking in production on Render)
     let emailResult = { sent: false };
-    try {
-      emailResult = await sendBookingNotification(newSubmission);
-    } catch (err) {
-      console.error('Customer email sending failed:', err);
+    const isRender = process.env.RENDER === 'true';
+    
+    if (isRender) {
+      console.log('Running in production on Render: sending emails asynchronously in the background...');
+      sendBookingNotification(newSubmission).catch(err => {
+        console.error('Non-blocking email sending failed:', err);
+      });
+    } else {
+      console.log('Running locally: awaiting email preview links...');
+      try {
+        emailResult = await sendBookingNotification(newSubmission);
+      } catch (err) {
+        console.error('Customer email sending failed:', err);
+      }
     }
 
     res.json({ 
