@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, MapPin, MessageSquare, User, Phone, Mail, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, MessageSquare, User, Phone, Mail, Sparkles, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { GoldLineFloral, WatercolorPoppy, BabysBreath } from './FloralDecoration';
 
 const eventTypes = [
@@ -106,13 +106,6 @@ export function BookYourStory() {
           website: ''
         });
         setErrors({});
-
-        // Auto-hide success message after 8 seconds
-        setTimeout(() => {
-          setSubmitStatus('idle');
-          setBookingPreviewUrl('');
-          setAdminPreviewUrl('');
-        }, 8000);
       } else {
         setSubmitStatus('error');
         setStatusMessage('Something went wrong. Please try again or contact us directly.');
@@ -176,9 +169,9 @@ export function BookYourStory() {
           </p>
         </motion.div>
 
-        {/* Status Messages */}
+        {/* Status Messages (Errors only inline) */}
         <AnimatePresence>
-          {submitStatus !== 'idle' && (
+          {submitStatus === 'error' && (
             <motion.div
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -186,57 +179,124 @@ export function BookYourStory() {
               transition={{ duration: 0.4 }}
               className="max-w-4xl mx-auto mb-8"
             >
-              <div className={`
-                backdrop-blur-xl rounded-2xl p-6 border-2
-                ${submitStatus === 'success' 
-                  ? 'bg-green-50/80 border-green-200' 
-                  : 'bg-red-50/80 border-red-200'
-                }
-              `}>
+              <div className="backdrop-blur-xl rounded-2xl p-6 border-2 bg-red-50/80 border-red-200">
                 <div className="flex items-start gap-4">
-                  {submitStatus === 'success' ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
-                  ) : (
-                    <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
-                  )}
+                  <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
                   <div className="w-full text-left">
-                    <h3 className={`font-semibold mb-1 ${
-                      submitStatus === 'success' ? 'text-green-900' : 'text-red-900'
-                    }`}>
-                      {submitStatus === 'success' ? 'Inquiry Submitted!' : 'Submission Failed'}
+                    <h3 className="font-semibold mb-1 text-red-900">
+                      Submission Failed
                     </h3>
-                    <p className={`${
-                      submitStatus === 'success' ? 'text-green-800' : 'text-red-800'
-                    }`}>
+                    <p className="text-red-800">
                       {statusMessage}
                     </p>
-                    {submitStatus === 'success' && (bookingPreviewUrl || adminPreviewUrl) && (
-                      <div className="pt-2.5 border-t border-green-200/50 mt-2.5 flex flex-col gap-2">
-                        {bookingPreviewUrl && (
-                          <a 
-                            href={bookingPreviewUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-green-950 hover:text-[#C5A880] font-semibold underline inline-flex items-center gap-1 transition-colors text-sm"
-                          >
-                            ✨ Click here to view your Ethereal Booking Receipt Email
-                          </a>
-                        )}
-                        {adminPreviewUrl && (
-                          <a 
-                            href={adminPreviewUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-green-950 hover:text-[#C5A880] font-semibold underline inline-flex items-center gap-1 transition-colors text-sm"
-                          >
-                            🔒 Click here to view Ethereal Admin Notification Email
-                          </a>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Success Modal Popup Overlay */}
+        <AnimatePresence>
+          {submitStatus === 'success' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            >
+              {/* Card Container */}
+              <motion.div
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                className="bg-[#FAF8F5] max-w-md w-full rounded-3xl p-8 border border-[#C5A880]/30 shadow-2xl relative overflow-hidden text-center"
+              >
+                {/* Decorative background floral */}
+                <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                  <BabysBreath position="absolute" size="lg" className="right-0 bottom-0" />
+                </div>
+                <div className="absolute -left-10 -top-10 opacity-10 pointer-events-none rotate-180">
+                  <BabysBreath position="absolute" size="lg" className="left-0 top-0" />
+                </div>
+
+                {/* Close Button in top right */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitStatus('idle');
+                    setBookingPreviewUrl('');
+                    setAdminPreviewUrl('');
+                  }}
+                  className="absolute top-4 right-4 text-[#7a7a7a] hover:text-[#C5A880] transition-colors p-1.5 rounded-full hover:bg-black/5"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                {/* Success Icon */}
+                <div className="relative mb-6 inline-flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#C5A880]/10 rounded-full blur-xl animate-pulse" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#FAF5EB] to-[#FAF8F5] border-2 border-[#C5A880]/30 rounded-full flex items-center justify-center relative">
+                    <CheckCircle className="w-10 h-10 text-[#C5A880]" />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <h3 
+                  className="text-3xl mb-3 text-[#2E2820] font-light"
+                  style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                >
+                  Inquiry Received
+                </h3>
+                
+                <p className="text-[#7a7a7a] text-base mb-6 leading-relaxed">
+                  Thank you! Our team will contact you soon.
+                </p>
+
+                {/* Receipt Preview Links for Development */}
+                {(bookingPreviewUrl || adminPreviewUrl) && (
+                  <div className="bg-[#FAF5EB]/80 border border-[#C5A880]/20 rounded-2xl p-4 mb-6 text-left space-y-3">
+                    <span className="text-xs uppercase tracking-widest text-[#C5A880] font-semibold block mb-1">
+                      Developer Previews
+                    </span>
+                    {bookingPreviewUrl && (
+                      <a 
+                        href={bookingPreviewUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#2E2820] hover:text-[#C5A880] font-medium underline flex items-center gap-1.5 transition-colors"
+                      >
+                        ✨ Customer Email Receipt
+                      </a>
+                    )}
+                    {adminPreviewUrl && (
+                      <a 
+                        href={adminPreviewUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#2E2820] hover:text-[#C5A880] font-medium underline flex items-center gap-1.5 transition-colors"
+                      >
+                        🔒 Admin Notification Email
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Action CTA Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitStatus('idle');
+                    setBookingPreviewUrl('');
+                    setAdminPreviewUrl('');
+                  }}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C5A880] to-[#E5C8A0] text-white font-medium hover:shadow-lg hover:shadow-[#C5A880]/25 transition-all duration-300 transform active:scale-[0.98]"
+                >
+                  Great!
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
