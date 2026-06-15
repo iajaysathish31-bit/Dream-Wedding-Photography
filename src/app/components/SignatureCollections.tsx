@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, Heart, Sparkles, Plane, BookOpen, Video, X, ArrowRight } from 'lucide-react';
+import { Camera, Heart, Sparkles, Plane, BookOpen, Video, X, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { GoldLineFloral, WatercolorPoppy, BabysBreath } from './FloralDecoration';
 import SacredGeometry from './SacredGeometry';
 
@@ -88,7 +88,22 @@ const collections = [
 
 export default function SignatureCollections() {
   const [selectedCollection, setSelectedCollection] = useState<typeof collections[0] | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedCollection || lightboxImageIndex === null) return;
+      if (e.key === 'Escape') {
+        setLightboxImageIndex(null);
+      } else if (e.key === 'ArrowRight') {
+        setLightboxImageIndex((prev) => (prev !== null ? (prev + 1) % selectedCollection.images.length : null));
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxImageIndex((prev) => (prev !== null ? (prev - 1 + selectedCollection.images.length) % selectedCollection.images.length : null));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCollection, lightboxImageIndex]);
 
   const handleBookService = () => {
     setSelectedCollection(null);
@@ -228,7 +243,7 @@ export default function SignatureCollections() {
                     key={i}
                     className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-zoom-in bg-gray-100"
                     whileHover={{ scale: 1.02 }}
-                    onClick={() => setLightboxImage(img.src)}
+                    onClick={() => setLightboxImageIndex(i)}
                   >
                     <img
                       src={img.src}
@@ -262,32 +277,63 @@ export default function SignatureCollections() {
 
       {/* Full Screen Image Lightbox */}
       <AnimatePresence>
-        {lightboxImage && (
+        {selectedCollection && lightboxImageIndex !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setLightboxImage(null)}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 select-none"
+            onClick={() => setLightboxImageIndex(null)}
           >
             <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-5 right-5 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              onClick={() => setLightboxImageIndex(null)}
+              className="absolute top-5 right-5 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer z-10"
             >
               <X className="w-6 h-6" />
             </button>
+
+            {/* Left navigation arrow */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxImageIndex((prev) => (prev !== null ? (prev - 1 + selectedCollection.images.length) % selectedCollection.images.length : null));
+              }}
+              className="absolute left-4 md:left-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer z-10"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Right navigation arrow */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxImageIndex((prev) => (prev !== null ? (prev + 1) % selectedCollection.images.length : null));
+              }}
+              className="absolute right-4 md:right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer z-10"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Image Container with Title Details */}
             <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="max-w-4xl max-h-[90vh] overflow-hidden rounded-xl shadow-2xl"
+              key={lightboxImageIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-4xl max-h-[85vh] relative"
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={lightboxImage}
-                alt="Full screen view"
-                className="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg"
+                src={selectedCollection.images[lightboxImageIndex].src}
+                alt={selectedCollection.images[lightboxImageIndex].alt}
+                className="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain mx-auto rounded-lg shadow-2xl"
               />
+              <div className="text-center text-white/60 text-xs mt-3 uppercase tracking-widest">
+                Image {lightboxImageIndex + 1} of {selectedCollection.images.length} — {selectedCollection.images[lightboxImageIndex].alt}
+              </div>
             </motion.div>
           </motion.div>
         )}
