@@ -255,34 +255,7 @@ export function BookYourStory() {
                   Thank you! Our team will contact you soon.
                 </p>
 
-                {/* Receipt Preview Links for Development */}
-                {(bookingPreviewUrl || adminPreviewUrl) && (
-                  <div className="bg-[#FAF5EB]/80 border border-[#C5A880]/20 rounded-2xl p-4 mb-6 text-left space-y-3">
-                    <span className="text-xs uppercase tracking-widest text-[#C5A880] font-semibold block mb-1">
-                      Developer Previews
-                    </span>
-                    {bookingPreviewUrl && (
-                      <a 
-                        href={bookingPreviewUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-[#2E2820] hover:text-[#C5A880] font-medium underline flex items-center gap-1.5 transition-colors"
-                      >
-                        ✨ Customer Email Receipt
-                      </a>
-                    )}
-                    {adminPreviewUrl && (
-                      <a 
-                        href={adminPreviewUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-[#2E2820] hover:text-[#C5A880] font-medium underline flex items-center gap-1.5 transition-colors"
-                      >
-                        🔒 Admin Notification Email
-                      </a>
-                    )}
-                  </div>
-                )}
+
 
                 {/* Action CTA Button */}
                 <button
